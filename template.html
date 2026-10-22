@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>밸런스 패치 아카이브</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --ink:#1C1C1E; --ink2:#4C4C50; --mute:#9A9AA0; --faint:#C6C6CB;
+  --line:#E3E3E7; --line2:#EFEFF1; --bg:#F4F4F6; --panel:#FAFAFB; --red:#E5202D;
+  --side:236px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  font-size:15px;line-height:1.6;letter-spacing:-.01em;word-break:keep-all;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;letter-spacing:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.025em}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+
+.sheet{max-width:1280px;margin:0 auto;background:#fff;border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:100vh}
+
+/* 마스트헤드 */
+.mast{padding:36px 56px 26px;background:var(--ink);color:#fff}
+.mast h1{font-size:28px;color:#fff}
+.mast h1 .hsub{color:#9A9AA0}
+.mast .desc{margin-top:6px;font-size:14px;color:#9A9AA0}
+.mastmeta{display:grid;grid-template-columns:repeat(3,1fr);margin-top:22px;border-top:1px solid rgba(255,255,255,.16);color:#9A9AA0}
+.mastmeta div{padding:11px 0 0 20px;border-left:1px solid rgba(255,255,255,.16)}
+.mastmeta div:first-child{padding-left:0;border-left:0}
+.mastmeta .lb{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;color:#8E8E96;margin-bottom:3px}
+.mastmeta .v{font-size:15px;color:#fff}
+.mastmeta .v b{font-weight:800}
+
+/* 상단 내비 버튼 */
+.topnav{display:flex;flex-wrap:wrap;gap:12px;padding:18px 48px;border-bottom:1px solid var(--line);background:#fff}
+.tbtn{display:inline-flex;align-items:center;gap:10px;height:54px;padding:0 24px;border-radius:10px;font-size:16.5px;font-weight:800;letter-spacing:-.02em;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.tbtn svg{flex:none}
+.tbtn.search{min-width:240px;background:var(--red);color:#fff;border:1px solid var(--red)}
+.tbtn.search:hover{background:#cf1b27;border-color:#cf1b27}
+.tbtn.search:not(.on){background:#fff;color:var(--red)}
+.tbtn.search:not(.on):hover{background:#FDECEC}
+.tbtn.arch{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.tbtn.arch:hover{border-color:var(--ink)}
+.tbtn.arch.open{background:var(--ink);border-color:var(--ink);color:#fff}
+.tbtn.arch .cnt{font-size:13px;font-weight:700;color:var(--mute)}
+.tbtn.arch.open .cnt{color:#9C9CA2}
+.tbtn.arch .chev{transition:transform .2s}
+.tbtn.arch.open .chev{transform:rotate(180deg)}
+
+/* 본문: 아카이브를 펼쳤을 때만 사이드 노출 */
+.layout{display:block}
+.layout.open{display:grid;grid-template-columns:var(--side) minmax(0,1fr)}
+.side[hidden]{display:none}
+.side{border-right:1px solid var(--line);position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto;padding:14px 0 40px}
+.side .sh{padding:0 22px;margin:20px 0 6px;font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--mute)}
+.side .sh:first-child{margin-top:0}
+.nav{display:flex;align-items:baseline;justify-content:space-between;gap:8px;width:100%;
+  padding:9px 22px 9px 20px;border-left:2px solid transparent;font-size:14.5px;font-weight:700;color:var(--mute);text-align:left}
+.nav .c{font-size:12px;font-weight:700;color:var(--faint);font-variant-numeric:tabular-nums}
+.nav:hover{color:var(--ink2);background:#FBFBFC}
+.nav.on{border-left-color:var(--red);color:var(--ink);background:#FBFBFC}
+.nav.on .c{color:var(--red)}
+.yr{padding:0 22px;margin:18px 0 4px;font-size:12.5px;font-weight:800;color:var(--ink2);display:flex;align-items:center;gap:10px}
+.yr:after{content:"";flex:1;height:1px;background:var(--line2)}
+
+.main{min-width:0;padding-bottom:80px}
+.pad{padding:0 48px}
+.view{display:none}.view.on{display:block}
+
+/* 헤더 */
+.rhead{padding:42px 48px 0}
+.rtitle{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.rtitle h2{font-size:27px}
+.rmeta{font-size:13px;color:var(--mute)}
+.rmeta b{color:var(--ink);font-weight:700}
+.lead{margin-top:14px;font-size:15px;line-height:1.8;color:var(--ink2)}
+
+/* 블록 */
+.block{margin:26px 48px 0;padding:22px 26px 24px;background:var(--panel);border:1px solid var(--line2);border-radius:10px}
+.bhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding-bottom:14px}
+.btitle{font-size:18px;font-weight:800;letter-spacing:-.025em;white-space:nowrap}
+.btitle:before{content:"";display:inline-block;width:7px;height:7px;background:var(--red);margin-right:10px;vertical-align:.18em}
+.bnote{font-size:12.5px;color:var(--mute)}
+
+/* 검색 폼 */
+.form{display:grid;grid-template-columns:auto 1fr;gap:14px 18px;align-items:center}
+.form .lb{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--mute)}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{padding:7px 15px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:14px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.pill:hover{border-color:var(--ink);color:var(--ink)}
+.pill.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.pill .c{margin-left:5px;font-size:12px;font-weight:700;color:var(--faint)}
+.pill.on .c{color:#9C9CA2}
+.q{width:100%;max-width:440px;padding:11px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:15.5px;font-weight:600;outline:0}
+.q:focus{border-color:var(--ink)}
+.q::placeholder{color:var(--faint);font-weight:500}
+.hint{grid-column:2;margin-top:-4px;font-size:13px;color:var(--mute);min-height:20px}
+.hint b{color:var(--ink);font-weight:700}
+
+/* 결과 목록 */
+.rows{margin-top:6px}
+.row{display:grid;gap:0 20px;padding:16px 0;border-bottom:1px solid var(--line2);align-items:start}
+.row:last-child{border-bottom:0}
+.row.has-date{grid-template-columns:96px 170px 120px 170px minmax(0,1fr)}
+.row.no-date{grid-template-columns:170px 120px 170px minmax(0,1fr)}
+.row.rh{padding:0 0 9px;border-bottom:1px solid var(--ink);font-size:13px;font-weight:700;color:var(--ink2);letter-spacing:.01em}
+.row:not(.rh):hover{background:#FBFBFC}
+.cell .mob{display:none}
+.dt{font-size:13px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.dt a{display:block;margin-top:3px;font-size:12px;font-weight:600;color:var(--mute);border-bottom:1px solid transparent;width:fit-content}
+.dt a:hover{color:var(--red);border-bottom-color:var(--red)}
+.mn{font-size:15px;font-weight:800;line-height:1.45;letter-spacing:-.02em}
+.mn .l2{display:block;margin-top:2px;font-size:13px;font-weight:600;color:var(--mute)}
+.attrs{display:flex;flex-wrap:wrap;gap:4px}
+.at{display:inline-block;padding:1px 8px;border-radius:5px;font-size:12.5px;font-weight:800;line-height:1.7;letter-spacing:0}
+.at.물{background:#E8F1FD;color:#2563C9}
+.at.불{background:#FDECEC;color:#D42323}
+.at.바람{background:#FFF3D6;color:#A87100}
+.at.빛{background:#DDF6EF;color:#0F8F78}
+.at.어둠{background:#EEE9FB;color:#6A3FD0}
+.at.전속성{background:var(--ink);color:#fff}
+.at.전체{background:#EFEFF1;color:var(--ink2)}
+.at.etc{background:#EFEFF1;color:var(--mute);font-weight:700}
+.sk{font-size:14px;font-weight:700;line-height:1.5;color:var(--ink)}
+.sk span{display:block}
+.sk .none,.none{color:var(--faint);font-weight:500}
+.tx{font-size:14px;line-height:1.75;color:#63636A;white-space:pre-wrap}
+.tx .tag{display:inline-block;margin-right:6px;padding:0 7px;border-radius:4px;background:#F1F1F3;font-size:12px;font-weight:800;line-height:1.7;color:var(--ink2);white-space:nowrap}
+.tx .ar{color:var(--red);font-weight:800}
+mark{background:#FFE9EA;color:inherit;border-radius:3px;padding:0 1px}
+.empty{padding:34px 0 10px;text-align:center;color:var(--mute);font-size:14.5px}
+.empty b{color:var(--ink)}
+
+/* 월별 탭: 섹션 */
+.secpills{position:sticky;top:0;z-index:20;background:#fff;display:flex;flex-wrap:wrap;gap:8px;margin:34px 0 0;padding:9px 48px;border-top:1px solid var(--ink);border-bottom:1px solid var(--line)}
+.secs{padding:0 48px}
+.sec{padding-top:36px;scroll-margin-top:70px}
+.sec+.sec{border-top:1px solid var(--line);margin-top:36px}
+.sechead{display:flex;align-items:baseline;gap:11px;padding-bottom:6px}
+.sechead .mark{width:4px;height:24px;background:var(--red);align-self:center;flex:none}
+.sechead h3{font-size:22px}
+.secmeta{font-size:12.5px;color:var(--mute)}
+.gband{margin:34px 48px 0;padding:10px 16px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;font-size:15px;font-weight:800}
+
+.foot{margin:60px 48px 0;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mute)}
+
+/* 모바일: 사이드 -> 상단 가로 탭 */
+@media (max-width:900px){
+  .mast{padding:34px 20px 28px}.mast h1{font-size:25px}
+  .mastmeta{grid-template-columns:1fr 1fr 1fr}.mastmeta div{padding-left:12px}.mastmeta .v{font-size:13.5px}
+  .topnav{padding:14px;gap:8px}.tbtn{height:50px;padding:0 16px;font-size:15px;flex:1 1 auto;justify-content:center}.tbtn.search{min-width:0}
+  .layout.open{display:block}
+  .side{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line);padding:6px 0 14px}
+  .side .yr{margin-top:12px}
+  .rhead{padding:30px 20px 0}.rtitle h2{font-size:23px}
+  .block{margin:20px 14px 0;padding:18px 16px 18px}
+  .gband{margin:26px 14px 0}
+  .secpills{top:0;padding:9px 14px}.secs{padding:0 14px}
+  .form{grid-template-columns:1fr;gap:8px}.hint{grid-column:1;margin-top:0}
+  .row.rh{display:none}
+  .row.has-date,.row.no-date{grid-template-columns:1fr;gap:6px;padding:16px 0}
+  .cell .mob{display:inline;font-size:11px;font-weight:700;color:var(--mute);margin-right:8px;letter-spacing:.04em}
+  .foot{margin:40px 20px 0}
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header class="mast">
+    <h1>밸런스 패치 <span class="hsub">아카이브</span></h1>
+    <p class="desc">몬스터별 밸런스 변경 이력을 검색하고, 월별 패치 노트를 열람합니다.</p>
+    <div class="mastmeta">
+      <div><span class="lb">수록 기간</span><span class="v" id="mPeriod"></span></div>
+      <div><span class="lb">패치 횟수</span><span class="v" id="mTabs"></span></div>
+      <div><span class="lb">변경 내역</span><span class="v" id="mRows"></span></div>
+    </div>
+  </header>
+
+  <div class="topnav">
+    <button class="tbtn search" id="btnSearch" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>몬스터 검색</button>
+    <button class="tbtn arch" id="btnArch" type="button" aria-expanded="false" aria-controls="side">패치 아카이브 <span class="cnt" id="archCnt"></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  </div>
+
+  <div class="layout" id="layout">
+    <nav class="side" id="side" aria-label="월별 패치 아카이브" hidden></nav>
+
+    <main class="main">
+      <!-- 검색 -->
+      <section class="view" id="v-search">
+        <div class="rhead">
+          <div class="rtitle"><h2>몬스터 검색</h2><span class="rmeta">전체 패치에서 해당 몬스터의 변경 이력을 찾습니다</span></div>
+        </div>
+        <div class="block">
+          <div class="bhead"><span class="btitle">검색 조건</span><span class="bnote">원본 몬스터명으로 검색하면 콜라보명도 함께 검색됩니다 (예: 사막전사 → 바예크)</span></div>
+          <div class="form">
+            <span class="lb">속성</span>
+            <div class="pills" id="attrPills"></div>
+            <span class="lb">몬스터명</span>
+            <input class="q" id="q" type="search" placeholder="몬스터 이름을 입력하세요" autocomplete="off" spellcheck="false">
+            <div class="hint" id="hint"></div>
+          </div>
+        </div>
+        <div class="block" id="resBlock">
+          <div class="bhead"><span class="btitle">검색 결과</span><span class="bnote" id="resNote"></span></div>
+          <div id="results"></div>
+        </div>
+      </section>
+
+      <!-- 월별 패치 -->
+      <section class="view" id="v-tab"></section>
+
+      <p class="foot">원본 데이터: Balance_patch_notes_archive_v2609 · 속성 표기는 원본 그대로이며, 「공통」은 전속성과 동일하게 표시됩니다.</p>
+    </main>
+  </div>
+</div>
+
+<script>
+const D=/*__DATA__*/null;
+</script>
+<script>
+(function(){
+const ATTRS=['물','불','바람','빛','어둠'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').replace(/\s+/g,'').toLowerCase();
+const tabsById={};D.tabs.forEach(t=>{tabsById[t.key]=t;t.n=t.groups.reduce((a,g)=>a+g.sections.reduce((b,s)=>b+s.rows.length,0),0)});
+const total=D.tabs.reduce((a,t)=>a+t.n,0);
+const label=k=>{const[y,m]=k.split('.');return y+'년 '+(+m)+'월'};
+
+/* 마스트 메타 */
+const keys=D.tabs.map(t=>t.key).sort();
+$('#mPeriod').innerHTML='<b>'+keys[0]+'</b> – <b>'+keys[keys.length-1]+'</b>';
+$('#mTabs').innerHTML='<b>'+D.tabs.length+'</b>회';
+$('#mRows').innerHTML='<b>'+total.toLocaleString()+'</b>건';
+
+/* 평탄화: 검색용 행 */
+const ALL=[];
+D.tabs.forEach(t=>t.groups.forEach(g=>g.sections.forEach(s=>s.rows.forEach(r=>{
+  ALL.push({r,tab:t.key,sec:s.name||'',nm:norm(r.m),set:attrSet(r.a)});
+}))));
+function attrSet(a){
+  const out=new Set();
+  String(a==null?'':a).split(/[\/\n]/).forEach(x=>{
+    x=x.trim();
+    if(ATTRS.includes(x))out.add(x);
+    else if(x==='전속성'||x==='공통')ATTRS.forEach(y=>out.add(y));
+  });
+  return out;
+}
+
+/* 사이드 */
+function renderSide(){
+  let h='<div class="sh">월별 패치 아카이브</div>';
+  let yr='';
+  D.tabs.forEach(t=>{
+    const y=t.key.slice(0,4);
+    if(y!==yr){yr=y;h+='<div class="yr">'+y+'</div>'}
+    h+='<button class="nav" data-r="'+t.key+'"><span>'+(+t.key.slice(5))+'월 패치</span><span class="c">'+t.n+'</span></button>';
+  });
+  $('#side').innerHTML=h;
+  $('#side').addEventListener('click',e=>{
+    const b=e.target.closest('.nav');if(b)go(b.dataset.r);
+  });
+  $('#archCnt').textContent=D.tabs.length;
+}
+
+/* 렌더 공통 */
+function attrHtml(a){
+  if(a==null||a==='')return '<span class="none">—</span>';
+  const raw=String(a);
+  if(raw.trim()==='-')return '<span class="at 전체" title="원본: -">전체 적용</span>';
+  const toks=raw.split(/[\/\n]/).map(x=>x.trim()).filter(Boolean);
+  return toks.map(x=>{
+    if(ATTRS.includes(x))return '<span class="at '+x+'">'+x+'</span>';
+    if(x==='전속성')return '<span class="at 전속성">전속성</span>';
+    if(x==='공통')return '<span class="at 전속성" title="원본: 공통">전속성</span>';
+    return '<span class="at etc">'+esc(x)+'</span>';
+  }).join('');
+}
+function hl(text,terms){
+  let t=esc(text);
+  if(!terms||!terms.length)return t;
+  terms=terms.filter(Boolean).sort((a,b)=>b.length-a.length).map(x=>esc(x).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  if(!terms.length)return t;
+  return t.replace(new RegExp('('+terms.join('|')+')','gi'),'<mark>$1</mark>');
+}
+function monHtml(m,terms){
+  const L=String(m).split('\n');
+  return '<div class="mn">'+hl(L[0],terms)+L.slice(1).map(x=>'<span class="l2">'+hl(x,terms)+'</span>').join('')+'</div>';
+}
+function skillHtml(k){
+  if(k==null||String(k).trim()===''||String(k).trim()==='-')return '<div class="sk"><span class="none">—</span></div>';
+  return '<div class="sk">'+String(k).split('\n').map(x=>'<span>'+esc(x)+'</span>').join('')+'</div>';
+}
+function textHtml(t){
+  if(t==null)return '<div class="tx"><span class="none">—</span></div>';
+  let s=esc(t);
+  s=s.replace(/^(\s*)(\[[^\]\n]{1,20}\]|【[^】\n]{1,20}】)/,(m,sp,g)=>sp+'<span class="tag">'+g.slice(1,-1)+'</span>');
+  s=s.replace(/→/g,'<span class="ar">→</span>');
+  return '<div class="tx">'+s+'</div>';
+}
+function rowHtml(r,o){
+  const dt=o.date?'<div class="cell dt">'+esc(r.d)+(o.tab?'<a href="#/'+o.tab+'" data-go="'+o.tab+'">'+label(o.tab)+(o.sec?' · '+esc(o.sec):'')+'</a>':'')+'</div>':'';
+  return '<div class="row '+(o.date?'has-date':'no-date')+'">'+dt+
+    '<div class="cell">'+monHtml(r.m,o.terms)+'</div>'+
+    '<div class="cell"><div class="attrs">'+attrHtml(r.a)+'</div></div>'+
+    '<div class="cell">'+skillHtml(r.k)+'</div>'+
+    '<div class="cell">'+textHtml(r.t)+'</div></div>';
+}
+function headHtml(date){
+  return '<div class="row rh '+(date?'has-date':'no-date')+'">'+(date?'<div>일정</div>':'')+'<div>몬스터</div><div>속성</div><div>변경 사항</div><div>상세 내용</div></div>';
+}
+
+/* 검색 */
+let attr='전체';
+function renderPills(){
+  $('#attrPills').innerHTML=['전체'].concat(ATTRS).map(a=>'<button class="pill'+(a===attr?' on':'')+'" data-a="'+a+'">'+a+'</button>').join('');
+}
+function counterparts(q){
+  const nq=norm(q);if(!nq)return[];
+  const out=new Set();
+  D.collab.forEach(([c,d])=>{
+    if(norm(c).includes(nq))out.add(d);
+    if(norm(d).includes(nq))out.add(c);
+  });
+  return [...out];
+}
+function search(){
+  const q=$('#q').value.trim();
+  const box=$('#results'),note=$('#resNote'),hint=$('#hint');
+  if(!q){
+    hint.innerHTML='';note.textContent='';
+    box.innerHTML='<div class="empty"><b>몬스터명</b>을 입력하면 변경 이력이 표시됩니다.</div>';
+    return;
+  }
+  const cp=counterparts(q);
+  const terms=[q].concat(cp);
+  const nterms=terms.map(norm);
+  hint.innerHTML=cp.length?'콜라보명 · 원본명 함께 검색: <b>'+cp.slice(0,5).map(esc).join(', ')+'</b>'+(cp.length>5?' 외 '+(cp.length-5)+'개':''):'';
+  const res=ALL.filter(x=>nterms.some(t=>x.nm.includes(t))&&(attr==='전체'||x.set.has(attr)));
+  note.textContent=res.length+'건'+(attr!=='전체'?' · 속성 '+attr+'(전속성 포함)':'');
+  if(!res.length){
+    box.innerHTML='<div class="empty">'+(attr!=='전체'?'<b>'+attr+'</b> 속성에서 ':'')+'<b>'+esc(q)+'</b>에 해당하는 변경 이력이 없습니다.</div>';
+    return;
+  }
+  const lim=400;
+  box.innerHTML='<div class="rows">'+headHtml(true)+res.slice(0,lim).map(x=>rowHtml(x.r,{date:true,tab:x.tab,sec:x.sec,terms})).join('')+'</div>'+
+    (res.length>lim?'<div class="empty">상위 '+lim+'건만 표시했습니다. 조건을 좁혀 주세요.</div>':'');
+}
+
+/* 월별 탭 */
+function renderTab(key){
+  const t=tabsById[key];
+  const multi=t.groups.length>1;
+  const dates=[...new Set(t.groups.flatMap(g=>g.sections.flatMap(s=>s.rows.map(r=>r.d))))].sort();
+  const showDate=dates.length>1;
+  const secs=[];t.groups.forEach((g,gi)=>g.sections.forEach((s,si)=>secs.push({g,gi,s,id:'sec-'+gi+'-'+si})));
+  const title=multi?label(key)+' 밸런스 패치':(t.groups[0].title||label(key)+' 밸런스 패치');
+  let h='<div class="rhead"><div class="rtitle"><h2>'+esc(title)+'</h2><span class="rmeta"><b>'+t.n+'</b>건 · '+dates.map(esc).join(', ')+'</span></div></div>';
+  h+='<div class="secpills">'+secs.map(x=>'<button class="pill" data-s="'+x.id+'">'+esc(x.s.name||'변경 내역')+'<span class="c">'+x.s.rows.length+'</span></button>').join('')+'</div>';
+  let lastG=-1;
+  h+='<div class="secs">';
+  secs.forEach((x,i)=>{
+    if(multi&&x.gi!==lastG&&x.g.title){h+='</div><div class="gband">'+esc(x.g.title)+'</div><div class="secs">'}
+    lastG=x.gi;
+    h+='<section class="sec" id="'+x.id+'"><div class="sechead"><span class="mark"></span><h3>'+esc(x.s.name||'변경 내역')+'</h3><span class="secmeta">'+x.s.rows.length+'건</span></div>'+
+      '<div class="rows">'+headHtml(showDate)+x.s.rows.map(r=>rowHtml(r,{date:showDate})).join('')+'</div></section>';
+  });
+  h+='</div>';
+  $('#v-tab').innerHTML=h;
+}
+
+/* 라우팅 */
+function go(r){location.hash='#/'+r}
+function setArch(open){
+  $('#side').hidden=!open;
+  $('#layout').classList.toggle('open',open);
+  $('#btnArch').classList.toggle('open',open);
+  $('#btnArch').setAttribute('aria-expanded',open);
+}
+let routed=false;
+function route(){
+  let r=(location.hash||'').replace(/^#\/?/,'')||'search';
+  if(r!=='search'&&!tabsById[r])r='search';
+  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on',b.dataset.r===r));
+  $('#btnSearch').classList.toggle('on',r==='search');
+  if(r!=='search')setArch(innerWidth>900||!routed);
+  routed=true;
+  $('#v-search').classList.toggle('on',r==='search');
+  $('#v-tab').classList.toggle('on',r!=='search');
+  if(r!=='search')renderTab(r);
+  window.scrollTo(0,0);
+}
+
+$('#attrPills').addEventListener('click',e=>{
+  const b=e.target.closest('.pill');if(!b)return;
+  attr=b.dataset.a;renderPills();search();
+});
+$('#q').addEventListener('input',search);
+$('#btnSearch').addEventListener('click',()=>{go('search');setTimeout(()=>$('#q').focus(),0)});
+$('#btnArch').addEventListener('click',()=>setArch($('#side').hidden));
+$('#v-tab').addEventListener('click',e=>{
+  const b=e.target.closest('[data-s]');
+  if(b){const el=document.getElementById(b.dataset.s);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
+});
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[data-go]');
+  if(a){e.preventDefault();go(a.dataset.go)}
+});
+window.addEventListener('hashchange',route);
+
+renderSide();renderPills();search();route();
+})();
+</script>
+</body>
+</html>
